@@ -26,7 +26,7 @@ x=200
 y=500
 width = 64
 height = 64
-vel = 15
+vel = 20
 isJump = False
 jumpCount = 10
 clock = pygame.time.Clock()
@@ -57,11 +57,24 @@ class Enemy:
 			self.x = 1000
 			self.y = 350
 			self.health = 3
+			self.vel = 0.05
 			self.sprite = pygame.image.load('Enemy1.png')
 	
 	def Draw(self):
 		win.blit(self.sprite, (self.x, self.y))
-
+		
+	def Move(self, x, y):
+		if self.x < x+150:
+			self.x += vel
+		elif self.x > x+350:
+			self.x -= vel
+			
+		if self.y < y - 150:
+			self.y += vel
+		elif self.y > y + 150:
+			self.y -= vel
+		
+		
 Enemy1 = Enemy(1)
 
 def redrawGameWindow():
@@ -70,8 +83,7 @@ def redrawGameWindow():
 	
 	#win.fill((135, 206, 250))
 	
-	if framecount + 1 >= 12:
-		framecount = 0
+	
 		
 	#Character animations
 	'''
@@ -87,7 +99,7 @@ def redrawGameWindow():
 	pygame.display.update()
 	
 	if bullet == True:
-		playerproj1.Draw()
+		PlayerProj.Draw()
 
 
 run = True
@@ -95,7 +107,7 @@ while run:
 	clock.tick(30)
 	
 	if bgx > -10230:
-		bgx -= (vel - 5)
+		bgx -= (vel - 12)
 	
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -104,10 +116,7 @@ while run:
 	keys = pygame.key.get_pressed()
 	
 	if keys[pygame.K_q]:
-		bullet = True
-		#if len(playerprojectiles)% 12 == 0:
-		playerproj1 = Projectile(x, y, 1)
-		playerprojectiles.append(playerproj1)
+		pass
 	
 	if keys[pygame.K_LEFT] and x > vel - 1:
 		x -= vel
@@ -129,24 +138,25 @@ while run:
 		framecount = 0
 		
 	# Remove Jump Function
-	if not(isJump):
-		if keys[pygame.K_UP] and y > vel - 1:
-			y -= vel
-		if keys[pygame.K_DOWN] and y < 700 - height - vel + 10:
-			y+= vel
-		if keys[pygame.K_SPACE]:
-			isJump = True
-	else:
-		if jumpCount >= -10:
-			neg = 1
-			if jumpCount < 0:
-				neg = -1
-			y -= (jumpCount ** 2) * 0.75 * neg
-			jumpCount -= 1
-		else:
-			isJump = False
-			jumpCount = 10
-		
-	redrawGameWindow()
 	
+	if keys[pygame.K_UP] and y > vel - 1:
+		y -= vel
+	if keys[pygame.K_DOWN] and y < 600 - height - vel + 10:
+		y+= vel
+	if keys[pygame.K_SPACE]:
+		bullet = True
+		# if len(playerprojectiles)% 12 == 0:
+		PlayerProj = Projectile(x, y, 1)
+		playerprojectiles.append(PlayerProj)
+	
+	
+	Enemy1.Move(x,y)
+	if bullet == True:
+		PlayerProj.Move()
+	
+	redrawGameWindow()
+	framecount += 1
+	
+	if framecount + 1 >= 12:
+		framecount = 0
 pygame.quit()
