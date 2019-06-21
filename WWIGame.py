@@ -18,6 +18,8 @@ bg = pygame.image.load('Background.png') # Not done yet
 char = pygame.image.load('RedBaron.png') # Temporary
 framecount = 0
 
+bullet = False
+playerprojectiles = []
 bgx = 0
 bgy = 0
 x=200
@@ -29,6 +31,25 @@ isJump = False
 jumpCount = 10
 clock = pygame.time.Clock()
 
+class Projectile:
+	def __init__(self, x, y, projtype):
+		self.x = x
+		self.y = y
+		
+		if projtype == 1:
+			self.damage = 3
+			self.vel = 20
+			self.move = 1		# straight
+			self.sprite = pygame.image.load('PlayerBullet.png')
+	
+	def Move(self):
+		if self.move == 1:
+			self.x += 35
+			
+	def Draw(self):
+		win.blit(self.sprite, (self.x,self.y))
+		
+	
 class Enemy:
 	def __init__(self, enemtype):
 		
@@ -37,9 +58,11 @@ class Enemy:
 			self.y = 350
 			self.health = 3
 			self.sprite = pygame.image.load('Enemy1.png')
+	
+	def Draw(self):
+		win.blit(self.sprite, (self.x, self.y))
 
-	def Display(self):
-		win.blit()
+Enemy1 = Enemy(1)
 
 def redrawGameWindow():
 	global framecount
@@ -59,11 +82,12 @@ def redrawGameWindow():
 	else:
 	'''
 	win.blit(char, (x,y))
-	
+	Enemy1.Draw()
 	
 	pygame.display.update()
 	
-
+	if bullet == True:
+		playerproj1.Draw()
 
 
 run = True
@@ -78,6 +102,12 @@ while run:
 			run = False
 		
 	keys = pygame.key.get_pressed()
+	
+	if keys[pygame.K_q]:
+		bullet = True
+		#if len(playerprojectiles)% 12 == 0:
+		playerproj1 = Projectile(x, y, 1)
+		playerprojectiles.append(playerproj1)
 	
 	if keys[pygame.K_LEFT] and x > vel - 1:
 		x -= vel
@@ -119,5 +149,4 @@ while run:
 		
 	redrawGameWindow()
 	
-
 pygame.quit()
