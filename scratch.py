@@ -118,6 +118,4 @@ while run:
 			jumpCount = 10
 		
 	redrawGameWindow()
-	
-
 pygame.quit()
