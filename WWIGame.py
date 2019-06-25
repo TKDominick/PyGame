@@ -1,5 +1,4 @@
 import pygame
-import time
 pygame.init()
 
 win = pygame.display.set_mode((1280,700))
@@ -13,6 +12,7 @@ Down = False
 
 
 bg = pygame.image.load('Background.png') # Not done yet
+bg2 = pygame.image.load('BGFarm.png')
 
 framecount = 0
 
@@ -22,27 +22,31 @@ enemies = []
 enemyattacks = []
 bullets = []
 bombs = []
-BulletOnCD = False
-BombOnCD = False
 BombCD = 3500
 BulletCD = 2000
 bgx = 0
-bgy = 0
-
+bg2x = 11520
+killed = {}
 
 clock = pygame.time.Clock()
 
 
 class Player:
-	def __init__(self, x,y,width,height,vel):
+	def __init__(self, x, y, width, height, vel):
+		self.health = 20
+		self.healthsprites =['Health0.png', 'Health1.png', 'Health2.png', 'Health3.png', 'Health4.png', 'Health5.png',
+						 'Health6.png', 'Health7.png', 'Health8.png', 'Health9.png', 'Health10.png',
+						 'Health11.png', 'Health12.png', 'Health13.png', 'Health14.png', 'Health15.png',
+						 'Health16.png', 'Health17.png', 'Health18.png', 'Health19.png', 'Health20.png']
 		self.x = x
 		self.y = y
 		self.width = width
 		self.height = height
 		self.vel = vel
-		self.char = pygame.image.load('RedBaron.png')
+		self.char = pygame.image.load('PlayerPlane.png')
 		self.flyleft = []
 		self.flyright = []
+		self.hitbox = (self.x, self.y + (64 - self.height), self.width, self.height)
 		self.Left = False
 		self.Right = False
 		self.Up = False
@@ -50,6 +54,10 @@ class Player:
 		
 	def Draw(self):
 		win.blit(self.char, (self.x,self.y))
+		pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+	def DrawHealth(self):
+		healthchar = pygame.image.load(self.healthsprites[self.health])
+		win.blit(healthchar, (560,550))
 		
 class Projectile:
 	def __init__(self, x, y, projtype, sprite):
@@ -65,7 +73,7 @@ class Projectile:
 			self.sprite = pygame.image.load(sprite)
 			
 		if projtype == 2:
-			self.damage = 15
+			self.damage = 10
 			self.xvel = 20
 			self.yvel = 0
 			self.yaccel = 5
@@ -105,6 +113,7 @@ class Enemy:
 	def __init__(self, x, y, health, vel, enemtype, sprite, width, height):
 		
 		if enemtype == 1:
+			self.name = 'Small Observer Balloon'
 			self.x = x
 			self.y = y
 			self.health = health
@@ -116,9 +125,11 @@ class Enemy:
 			self.attacksprite = 'Enemy1Grenade.png'
 			self.attackCD = 1500
 			self.CDMAX = 1500
+			self.hitbox = (self.x, self.y, self.width, self.height)
 			
 	def Draw(self):
 		win.blit(self.sprite, (self.x, self.y))
+		pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 		
 	def Move(self, x, y):
 		if self.x < x+150:
@@ -144,8 +155,8 @@ def ColissionDetect(unitx, unity, unitwidth, unitheight, projectilex, projectile
 		
 def redrawGameWindow():
 	global framecount
-	win.blit(bg, (bgx, bgy))
-	
+	win.blit(bg, (bgx, 0))
+	win.blit(bg2, (bg2x, 0))
 	#Character animations
 	'''
 	if Left:
@@ -155,6 +166,7 @@ def redrawGameWindow():
 	else:
 	'''
 	Plane.Draw()
+	Plane.DrawHealth()
 	
 	for enemy in enemies:
 		enemy.Draw()
@@ -174,18 +186,27 @@ def redrawGameWindow():
 	pygame.display.update()
 	
 	
-Plane = Player(200,500,64,64,10)
+Plane = Player(200, 500, 64, 54, 10)
 run = True
 while run:
 	clock.tick(20)
 	
-	if bgx < -2500 and len(enemies) == 0:
-		Enemy1 = Enemy(1000, 350, 3, 4, 1, 'Enemy1.png', 64, 64)
+	if 6500 <bg2x < 10000 and len(enemies) == 0:
+		Enemy1 = Enemy(1000, 350, 25, 4, 1, 'Enemy1.png', 64, 64)
 		enemies.append(Enemy1)
+	if bg2x < 6000 and killed['Small Observer Balloon'] >= 5 and len(enemies) == 0:
+		Enemy1 = Enemy(1000, 150, 20, 4, 1, 'Enemy1.png', 64, 64)
+		enemies.append(Enemy1)
+		Enemy2 = Enemy(1000, 350, 20, 4, 1, 'Enemy1.png', 64, 64)
+		enemies.append(Enemy2)
+		Enemy3 = Enemy(1000, 550, 20, 4, 1, 'Enemy1.png', 64, 64)
+		enemies.append(Enemy3)
 	
-	if bgx > -10230:
-		bgx -= (5)
+	if bgx > -10294:
+		bgx -= 5
+		bg2x -= 5
 	
+		
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
@@ -221,30 +242,25 @@ while run:
 	if keys[pygame.K_DOWN] and Plane.y < 600 - Plane.height - Plane.vel + 10:
 		Plane.y += Plane.vel
 	
-	if keys[pygame.K_q] and (framecount % 24) == 0 and BulletOnCD == False:
+	if keys[pygame.K_q] and (framecount % 24) == 0 and BulletCD == 0:
 		if len(bullets) < 10:
 			PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1, 'PlayerBullet.png')
 			bullets.append(PlayerBullet)
+			BulletCD += 300
 		elif len(bullets) == 10:
-			BulletOnCD = True
-	if keys[pygame.K_e] and (framecount % 24) == 0 and BombOnCD == False:
+			BulletCD += 3500
+	if keys[pygame.K_e] and (framecount % 24) == 0 and BombCD == 0:
 		if len(bombs) < 3:
 			PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2, 'PlayerBomb.png')
 			bombs.append(PlayerBomb)
+			BombCD += 600
 		elif len(bombs) == 3:
-			BombOnCD = True
+			BombCD += 4000
 			
-	if BulletOnCD == True:
+	if BulletCD != 0:
 		BulletCD -= 50
-	if BulletCD <= 0:
-		BulletOnCD = False
-		BulletCD = 2000
-	
-	if BombOnCD == True:
+	if BombCD != 0:
 		BombCD -= 50
-	if BombCD <= 0:
-		BombOnCD = False
-		BombCD = 3000
 	
 	for bullet in bullets:
 		if 0 < bullet.x < 1280:
@@ -266,6 +282,7 @@ while run:
 			enemy.attackCD = enemy.CDMAX
 		else:
 			enemy.attackCD -= 40
+		enemy.hitbox = (enemy.x, enemy.y, enemy.width, enemy.height)
 	
 	for attack in enemyattacks:
 		if 0 < attack.x < 1280 and 0 < attack.y < 700:
@@ -277,6 +294,7 @@ while run:
 	for bullet in bullets:
 		for enemy in enemies:
 			if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bullet.x, bullet.y):
+				enemy.health -= 3
 				Explosion = (bullet.x,bullet.y)
 				explosions.append(Explosion)
 				bullets.pop(bullets.index(bullet))
@@ -284,12 +302,14 @@ while run:
 	for bomb in bombs:
 		for enemy in enemies:
 			if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bomb.x, bomb.y):
+				enemy.health -= 10
 				Explosion = (bomb.x,bomb.y)
 				explosions.append(Explosion)
 				bombs.pop(bombs.index(bomb))
 				
 	for attack in enemyattacks:
 		if ColissionDetect(Plane.x, Plane.y, 64, 64, attack.x, attack.y):
+			Plane.health -= 2
 			Explosion = (attack.x,attack.y)
 			explosions.append(Explosion)
 			enemyattacks.pop(enemyattacks.index(attack))
@@ -299,13 +319,20 @@ while run:
 				explosions.append(Explosion)
 				enemyattacks.pop(enemyattacks.index(attack))
 	
+	Plane.hitbox = (Plane.x, Plane.y + (64 - Plane.height), Plane.width, Plane.height)
+	
+	for enemy in enemies:
+		if enemy.health <= 0:
+			if enemy.name not in killed:
+				killed[enemy.name] = 0
+			killed[enemy.name] += 1
+			enemies.pop(enemies.index(enemy))
 	
 	redrawGameWindow()
 	if framecount + 1 > 24:
 		framecount = 0
-		
+		print(killed)
+		explosions = []
 	else:
 		framecount += 1
-	if framecount % 4 == 0:
-		explosions = []
 pygame.quit()
