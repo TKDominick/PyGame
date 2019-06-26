@@ -187,7 +187,7 @@ def GetBackground(killed):
 		if len(killed) >= 100:
 			output = 'EnemyBase1.png'
 		else:
-			output = random.choice[general]
+			output = random.choice(general)
 	
 	if prevbackground == 'EnemyBase1.png':
 		output = 'EnemyBase2.png'
@@ -219,7 +219,7 @@ def BackgroundRunner():
 		bgx = 0
 		bg2 = bg3
 		bg2x = 1280
-		bg3 = pygame.image.load(GetBackground(killed))
+		bg3 = pygame.image.load((GetBackground(killed)))
 		print(type(bg3))
 		bg3x = 2560
 	
