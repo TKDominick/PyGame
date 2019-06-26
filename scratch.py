@@ -36,7 +36,7 @@ class Enemy:
 			self.x = 1000
 			self.y = 350
 			self.health = 3
-			self.sprite = pygame.image.load('Enemy1.png')
+			self.sprite = pygame.image.load('Balloon1.png')
 
 	def Display(self):
 		win.blit()
