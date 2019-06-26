@@ -163,6 +163,8 @@ def ColissionDetect(unitx, unity, unitwidth, unitheight, projectilex, projectile
 
 def GetBackground(killed):
 	global prevbackground
+	output = 'Field1.png'
+	
 	fields = ['Field1.png', 'Field2.png', 'Field3.png', 'Field4.png']
 	general = ['Field1.png', 'Field2.png', 'Field3.png', 'Field4.png', 'Village.png', 'City1.png', 'EnemyCamp.png', 'Airfield1.png']
 
@@ -170,31 +172,34 @@ def GetBackground(killed):
 		output = random.choice(general)
 	
 	if prevbackground == 'Airfield1.png':
-		return 'Airfield2.png'
+		output = 'Airfield2.png'
 	if prevbackground == 'City1.png':
-		return 'City2.png'
+		output = 'City2.png'
 	if prevbackground == 'City2.png':
-		return 'City3.png'
+		output = 'City3.png'
 	if prevbackground == 'City3.png':
-		return random.choice(general)
+		output = random.choice(general)
 	
 	if prevbackground == 'Village.png':
-		return random.choice(fields)
+		output = random.choice(fields)
 		
 	if prevbackground == 'Field1.png' or prevbackground == 'Field2.png' or prevbackground == 'Field3.png' or prevbackground == 'Field4.png':
 		if len(killed) >= 100:
-			return 'EnemyBase1.png'
+			output = 'EnemyBase1.png'
 		else:
-			return random.choice[general]
+			output = random.choice(general)
 	
-	if prevbackground == pygame.image.load('EnemyBase1.png'):
-		return 'EnemyBase2.png'
-	if prevbackground == pygame.image.load('EnemyBase2.png'):
-		return 'EnemyHangar.png'
-	if prevbackground == pygame.image.load('EnemyHangar.png'):
-		return 'Sky1.png'
-	if prevbackground == pygame.image.load('Sky1.png'):
-		return 'Sky2.png'
+	if prevbackground == 'EnemyBase1.png':
+		output = 'EnemyBase2.png'
+	if prevbackground == 'EnemyBase2.png':
+		output = 'EnemyHangar.png'
+	if prevbackground == 'EnemyHangar.png':
+		output = 'Sky1.png'
+	if prevbackground == 'Sky1.png':
+		output = 'Sky2.png'
+	
+	prevbackground = output
+	return output
 	
 def BackgroundRunner():
 	global killed
@@ -214,7 +219,7 @@ def BackgroundRunner():
 		bgx = 0
 		bg2 = bg3
 		bg2x = 1280
-		bg3 = pygame.image.load(GetBackground(bg3, killed))
+		bg3 = pygame.image.load((GetBackground(killed)))
 		print(type(bg3))
 		bg3x = 2560
 	
