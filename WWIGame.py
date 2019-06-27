@@ -12,16 +12,20 @@ Right = False
 Up = False
 Down = False
 
-
+score = 101
 bg = pygame.image.load('Airfield1.png')
 print(bg)
 bg2 = pygame.image.load('Airfield2.png')
 bg3 = pygame.image.load('Industrial.png')
+bgcount = 1
 prevbackground = 'Industrial.png'
 
 bgx = 0
+bgy = 0
 bg2x = 1280
+bg2y = 0
 bg3x = 2560
+bg3y = 0
 
 framecount = 0
 
@@ -33,6 +37,8 @@ bullets = []
 bombs = []
 BombCD = 3500
 BulletCD = 2000
+font = pygame.font.SysFont('sitkasmallsitkatextitalicsitkasubheadingitalicsitkaheadingitalicsitkadisplayitalicsitkabanneritalic.ttf', 42)
+
 
 
 killed = []
@@ -66,11 +72,11 @@ class Player:
 		pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 	def DrawHealth(self):
 		healthchar = pygame.image.load(self.healthsprites[self.health])
-		win.blit(healthchar, (560, 75))
+		win.blit(healthchar, (480, 75))
 	
 		
 class Projectile:
-	def __init__(self, x, y, projtype, sprite):
+	def __init__(self, x, y, projtype):
 		self.x = x
 		self.y = y
 		
@@ -78,41 +84,77 @@ class Projectile:
 		if projtype == 1:
 			self.damage = 3
 			self.xvel = 30
-			self.yvel = 00
+			self.xaccel = 0
+			self.yvel = 0
 			self.move = 1		# straight
-			self.sprite = pygame.image.load(sprite)
+			self.sprite = pygame.image.load('PlayerBullet.png')
 			
 		if projtype == 2:
 			self.damage = 10
 			self.xvel = 20
+			self.xaccel = 0
 			self.yvel = 0
 			self.yaccel = 5
 			self.move = 2
-			self.sprite = pygame.image.load(sprite)
+			self.sprite = pygame.image.load("PlayerBomb.png")
 		
-		if projtype == 3:
+		if projtype == 3: #Baloon 1 Bullet
 			self.damage = 2
 			self.xvel = -12
 			self.yvel = -25
 			self.yaccel = 5
 			self.move = 3
-			self.sprite = pygame.image.load('Enemy1Grenade.png')
+			self.sprite = pygame.image.load('Bullet.png')
 		
+		if projtype == 4: #Tank projectile
+			self.damage = 5
+			self.move = 3
+			self.yvel = -100
+			self.yaccel = 15
+			self.xvel = -50
+			self.xaccel = 0
+			self.sprite = pygame.image.load('Bullet.png')
 		
-	def Move(self):
-		if self.move == 1:
+		if projtype == 5: # Cannon projectile
+			self.damage = 3
+			self.move = 3
+			self.yvel = -75
+			self.yaccel = 10
+			self.xvel = -40
+			self.xaccel =0
+			self.sprite = pygame.image.load('Bullet.png')
+		
+	def Move(self, targetx, targety):
+		if self.move == 1: # player bullet
 			self.x += self.xvel
 			self.y += self.yvel
 		
-		elif self.move == 2:
+		elif self.move == 2: #player bomb
 			self.x += self.xvel
 			self.y += self.yvel
 			self.yvel += self.yaccel
 		
-		elif self.move == 3:
+		elif self.move == 3: # arc shape
 			self.x += self.xvel
 			self.y += self.yvel
 			self.yvel += self.yaccel
+		
+		elif self.move == 4: #Straight Down Bomb
+			self.y += self.yvel
+			self.y += self.yaccel
+		
+		elif self.move == 5: #Straight bullet
+			self.x += self.xvel
+			self.xvel += self.xaccel
+			
+		elif self.move == 12: # targeting missile
+			if self.x < targetx:
+				self.x+= self.xvel
+			if self.y < targety:
+				self.y += self.yvel
+			if self.y > targety:
+				self.y -= self.yvel
+			
 			
 	def Draw(self):
 		win.blit(self.sprite, (self.x, self.y))
@@ -142,7 +184,7 @@ class Enemy:
 			self.y = y
 			self.health = 45
 			self.vel = 9
-			self. width = 64
+			self.width = 64
 			self.height = 64
 			self.sprite = pygame.image.load('Baloon2.png')
 			self.attacktype = 5
@@ -157,7 +199,7 @@ class Enemy:
 			self.y = y
 			self.health = 30
 			self.vel = 17
-			self. width = 64
+			self.width = 64
 			self.height = 64
 			self.sprite = pygame.image.load('Plane1.png')
 			self.attacktype = 3
@@ -220,11 +262,11 @@ class Enemy:
 			self.width = 64
 			self.height = 64
 			self.sprite = pygame.image.load('Cannon.png')
-			self.attacktype = 1
+			self.attacktype = 5
 			self.attacksprite = pygame.image.load('Bullet.png')
-			self.attackCD = 1500
-			self.CDMAX = 1500
-			self.movetype = 7
+			self.attackCD = 500
+			self.CDMAX = 650
+			self.movetype = 3
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 8: #Tank
 			self.name = 'Enemy Tank'
@@ -235,11 +277,11 @@ class Enemy:
 			self. width = 64
 			self.height = 64
 			self.sprite = pygame.image.load('Tank.png')
-			self.attacktype = 1
+			self.attacktype = 4
 			self.attacksprite = pygame.image.load('Bullet.png')
-			self.attackCD = 3000
-			self.CDMAX = 3000
-			self.movetype = 7
+			self.attackCD = 1000
+			self.CDMAX = 1000
+			self.movetype = 2
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 9: #Final Boss Plane
 			self.name = 'Aurora 1A'
@@ -264,21 +306,27 @@ class Enemy:
 		
 	def Move(self, x, y):
 		if self.movetype == 1:
-			if self.x < x+150:
+			if self.x <= x+150:
 				self.x += self.vel
-			elif self.x > x+170:
+			elif self.x >= x+170:
 				self.x -= self.vel
 				
-			if self.y < y - 20:
-				self.y += self.vel
-			elif self.y > y:
+			if self.y >= y - 20:
 				self.y -= self.vel
+			elif self.y <= y - 50:
+				self.y += self.vel
 			
-		if self.movetype == 2:
-			pass
+		if self.movetype == 2: # Tank
+			if self.x > 850:
+				self.x -= self.vel
+			if self.x < 800:
+				self.x += self.vel
 		
-		if self.movetype == 3:
-			pass
+		if self.movetype == 3: #Cannon
+			if self.x > 600:
+				self.x -= self.vel
+			if self.x < 550:
+				self.x += self.vel
 		
 		if self.movetype == 4:
 			pass
@@ -311,8 +359,10 @@ def ColissionDetect(unitx, unity, unitwidth, unitheight, projectilex, projectile
 		return False
 
 
-def GetBackground(killed):
+def GetBackground():
 	global prevbackground
+	global bgcount
+	bgcount += 1
 	output = 'Field1.png'
 	
 	fields = ['Field1.png', 'Field2.png', 'Field3.png', 'Field4.png']
@@ -324,7 +374,7 @@ def GetBackground(killed):
 	if prevbackground == 'Airfield1.png':
 		output = 'Airfield2.png'
 	if prevbackground == 'Airfield2.png':
-		output = 'Industrial'
+		output = 'Industrial.png'
 	if prevbackground == 'City1.png':
 		output = 'City2.png'
 	if prevbackground == 'City2.png':
@@ -336,7 +386,7 @@ def GetBackground(killed):
 		output = random.choice(fields)
 		
 	if prevbackground == 'Field1.png' or prevbackground == 'Field2.png' or prevbackground == 'Field3.png' or prevbackground == 'Field4.png':
-		if len(killed) >= 100:
+		if score >= 100:
 			output = 'EnemyBase1.png'
 		else:
 			output = random.choice(general)
@@ -357,31 +407,63 @@ def GetBackground(killed):
 def BackgroundRunner():
 	global killed
 	global bg
+	global prevbackground
 	global bg2
 	global bg3
 	global bgx
 	global bg2x
 	global bg3x
+	global bgy
+	global bg2y
+	global bg3y
 	
-	bgx -= 5
-	bg2x -= 5
-	bg3x -= 5
+	if prevbackground != 'Sky2.png' and prevbackground != 'end':
+		bgx -= 5
+		bg2x -= 5
+		bg3x -= 5
+	else:
+		bgy += 5
+		bg2y += 5
+		bg3y += 5
 	
-	if bg2x == 0:
+	if bg2x <= 0 and prevbackground != 'Sky2.png':
 		bg = bg2
 		bgx = 0
 		bg2 = bg3
 		bg2x = 1280
-		bg3 = pygame.image.load((GetBackground(killed)))
-		print(type(bg3))
+		bg3 = pygame.image.load(GetBackground())
 		bg3x = 2560
-
+		
+	if bgx <= 0 and prevbackground == 'Sky2.png':
+		prevbackground = 'end'
+		bg = pygame.image.load('EnemyHangar.png')
+		bgx = 0
+		bgy = 0
+		bg2 = pygame.image.load('Sky1.png')
+		bg2x = 0
+		bg2y = -700
+		bg3 = pygame.image.load('Sky2.png')
+		bg3x = 0
+		bg3y = -1400
+	
 	
 def redrawGameWindow():
 	global framecount
-	win.blit(bg, (bgx, 0))
-	win.blit(bg2, (bg2x, 0))
-	win.blit(bg3, (bg3x, 0))
+	win.blit(bg, (bgx, bgy))
+	win.blit(bg2, (bg2x, bg2y))
+	win.blit(bg3, (bg3x, bg3y))
+	
+	midline = pygame.Rect(639, -2, 3, 705)
+	pygame.draw.rect(win, (0, 0, 0), midline)
+	
+	textplate = font.render(str(score), True, (0, 0, 0))
+	if len(str(score)) == 1:
+		win.blit(textplate, (633, 25))
+	if len(str(score)) == 2:
+		win.blit(textplate, (624, 25))
+	if len(str(score)) == 3:
+		win.blit(textplate, (617, 25))
+	
 	#Character animations
 	'''
 	if Left:
@@ -410,11 +492,22 @@ def redrawGameWindow():
 	
 	pygame.display.update()
 	
-def GetWave(killed):
-	
-	if prevbackground == 'Field4.png' and len(enemies) == 0:
-		Balloon1 = Enemy(1000, 350, 1)
-		enemies.append(Balloon1)
+def GetWave():
+	global killed
+	global score
+	global enemies
+	if score <= 100:
+		if len(enemies) == 0 and  10 > bgcount >= 5:
+			SmolBalloon = Enemy(900, 350, 1)
+			Cannon = Enemy(900, 630, 7)
+			enemies.append(SmolBalloon)
+			enemies.append(Cannon)
+		if len(enemies) == 0 and 20 > bgcount >= 12:
+			Cannon = Enemy(900, 620, 7)
+			enemies.append(Cannon)
+		if len(enemies) == 0 and 40 > bgcount >= 20:
+			Tank = Enemy(900, 620, 8)
+			enemies.append(Tank)
 		
 Plane = Player(200, 500, 64, 54, 10)
 run = True
@@ -422,58 +515,60 @@ while run:
 	clock.tick(20)
 	
 	BackgroundRunner()
-	GetWave(killed)
+	GetWave()
 		
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
+	
+	while True:
+		keys = pygame.key.get_pressed()
 		
-	keys = pygame.key.get_pressed()
-	
-	if keys[pygame.K_q]:
-		pass
-	
-	if keys[pygame.K_LEFT] and Plane.x > Plane.vel - 1:
-		Plane.x -= Plane.vel
-		Left = True
-		Right = False
-		Up = False
-		Down = False
-	
-	elif keys[pygame.K_RIGHT] and Plane.x < 1280 - Plane.width - Plane.vel + 10:
-		Plane.x += Plane.vel
-		Left = False
-		Right = True
-		Up = False
-		Down = False
-	else:
-		Left = False
-		Right = False
-		Up = False
-		Down = False
+		if keys[pygame.K_q]:
+			pass
 		
+		if keys[pygame.K_LEFT] and Plane.x > Plane.vel - 1:
+			Plane.x -= Plane.vel
+			Left = True
+			Right = False
+			Up = False
+			Down = False
 		
-	if keys[pygame.K_UP] and Plane.y > Plane.vel - 1:
-		Plane.y -= Plane.vel
-	
-	if keys[pygame.K_DOWN] and Plane.y < 600 - Plane.height - Plane.vel + 10:
-		Plane.y += Plane.vel
-	
-	if keys[pygame.K_q] and BulletCD == 0:
-		if len(bullets) < 10:
-			PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1, 'PlayerBullet.png')
-			bullets.append(PlayerBullet)
-			BulletCD += 300
-		elif len(bullets) == 10:
-			BulletCD += 3500
-	if keys[pygame.K_e] and BombCD == 0:
-		if len(bombs) < 3:
-			PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2, 'PlayerBomb.png')
-			bombs.append(PlayerBomb)
-			BombCD += 600
-		elif len(bombs) == 3:
-			BombCD += 4000
+		elif keys[pygame.K_RIGHT] and Plane.x < 1280 - Plane.width - Plane.vel + 10:
+			Plane.x += Plane.vel
+			Left = False
+			Right = True
+			Up = False
+			Down = False
+		else:
+			Left = False
+			Right = False
+			Up = False
+			Down = False
 			
+			
+		if keys[pygame.K_UP] and Plane.y > Plane.vel - 1:
+			Plane.y -= Plane.vel
+		
+		if keys[pygame.K_DOWN] and Plane.y < 600 - Plane.height - Plane.vel + 10:
+			Plane.y += Plane.vel
+		
+		if keys[pygame.K_q] and BulletCD == 0:
+			if len(bullets) < 10:
+				PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1)
+				bullets.append(PlayerBullet)
+				BulletCD += 150
+			elif len(bullets) == 10:
+				BulletCD += 3500
+		if keys[pygame.K_e] and BombCD == 0:
+			if len(bombs) < 5:
+				PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2)
+				bombs.append(PlayerBomb)
+				BombCD += 400
+			if len(bombs) >= 2:
+				BombCD += 5000
+		break     #Key Presses
+		
 	if BulletCD != 0:
 		BulletCD -= 50
 	if BombCD != 0:
@@ -481,63 +576,59 @@ while run:
 	
 	for bullet in bullets:
 		if 0 < bullet.x < 1280:
-			bullet.Move()
+			bullet.Move(Plane.x, Plane.y)
 		else:
 			bullets.pop(bullets.index(bullet))
 	
 	for bomb in bombs:
 		if 0 < bomb.x < 1280 and bomb.y < 700:
-			bomb.Move()
+			bomb.Move(Plane.x, Plane.y)
 		else:
 			bombs.pop(bombs.index(bomb))
 			
 	for enemy in enemies:
 		enemy.Move(Plane.x,Plane.y)
 		if enemy.attackCD <= 0:
-			EnemyAttack = Projectile(enemy.x, enemy.y, enemy.attacktype, enemy.attacksprite)
+			EnemyAttack = Projectile(enemy.x, enemy.y, enemy.attacktype)
 			enemyattacks.append(EnemyAttack)
 			enemy.attackCD = enemy.CDMAX
 		else:
 			enemy.attackCD -= 40
 		enemy.hitbox = (enemy.x, enemy.y, enemy.width, enemy.height)
-	
-	for attack in enemyattacks:
-		if 0 < attack.x < 1280 and 0 < attack.y < 700:
-			attack.Move()
-			attack.Draw()
-		else:
-			enemyattacks.pop(enemyattacks.index(attack))
 		
-	for enemy in enemies:
 		for bullet in bullets:
 			if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bullet.x, bullet.y):
 				enemy.health -= 3
 				Explosion = (bullet.x,bullet.y)
 				explosions.append(Explosion)
 				bullets.pop(bullets.index(bullet))
-		
-	for enemy in enemies:
+	
 		for bomb in bombs:
 			if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bomb.x, bomb.y):
 				enemy.health -= 10
 				Explosion = (bomb.x,bomb.y)
 				explosions.append(Explosion)
 				bombs.pop(bombs.index(bomb))
-				
+	
+		if enemy.health <= 0:
+			killed.append(enemy.name)
+			score += 1
+			enemies.pop(enemies.index(enemy))
+	
 	for attack in enemyattacks:
+		if 0 < attack.x < 1280 and attack.y < 700:
+			attack.Move(Plane.x, Plane.y)
+			attack.Draw()
+		else:
+			enemyattacks.pop(enemyattacks.index(attack))
+		
 		if ColissionDetect(Plane.x, Plane.y, Plane.width, Plane.height, attack.x, attack.y):
-			Plane.health -= 2
+			Plane.health -= attack.damage
 			Explosion = (attack.x,attack.y)
 			explosions.append(Explosion)
 			enemyattacks.pop(enemyattacks.index(attack))
 	
 	Plane.hitbox = (Plane.x, Plane.y + (64 - Plane.height), Plane.width, Plane.height)
-	
-	for enemy in enemies:
-		if enemy.health <= 0:
-			killed.append(enemy.name)
-			enemies.pop(enemies.index(enemy))
-	
 	
 	if framecount + 1 > 24:
 		framecount = 0
@@ -546,4 +637,7 @@ while run:
 		explosions = []
 	framecount += 1
 	redrawGameWindow()
+	if Plane.health <= 0:
+		run = False
+		
 pygame.quit()
