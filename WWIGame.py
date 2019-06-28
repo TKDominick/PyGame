@@ -5,7 +5,7 @@ pygame.init()
 
 win = pygame.display.set_mode((1280,700))
 
-pygame.display.set_caption("Test Game")
+pygame.display.set_caption("Plane Shooter Game")
 
 Left = False
 Right = False
@@ -27,6 +27,9 @@ bg2y = 0
 bg3x = 2560
 bg3y = 0
 
+paused = True
+won = False
+
 framecount = 0
 bossspawned = False
 initializefight = False
@@ -39,9 +42,7 @@ bombs = []
 BombCD = 3500
 BulletCD = 2000
 font = pygame.font.SysFont('sitkasmallsitkatextitalicsitkasubheadingitalicsitkaheadingitalicsitkadisplayitalicsitkabanneritalic.ttf', 42)
-
-
-
+font2 = pygame.font.SysFont('sitkasmallsitkatextitalicsitkasubheadingitalicsitkaheadingitalicsitkadisplayitalicsitkabanneritalic.ttf', 242)
 killed = []
 
 clock = pygame.time.Clock()
@@ -123,17 +124,26 @@ class Projectile:
 			self.xvel = -40
 			self.xaccel =0
 			self.sprite = pygame.image.load('Bullet.png')
+		if projtype == 11:
+			self.damage = 1
+			self.move = 5
+			self.yvel = 0
+			self.yaccel = 0
+			self.xvel = -30
+			self.xaccel = 0
+			self.sprite = pygame.image.load('FBBullet.png')
 		
 		if projtype == 12:
 			self.damage = 2
 			self.move = 3
-			self.yvel = -80
-			self.yaccel = 10
-			self.xvel = -60
+			self.yvel = -40
+			self.yaccel = 5
+			self.xvel = -20
 			self.xaccel = 0
 			self.sprite = pygame.image.load('FBBullet.png')
 		if projtype == 13:
 			self.x = x+54
+			self.damage = 2
 			self.move = 12
 			self.yvel = 3
 			self.yaccel = 0
@@ -142,7 +152,14 @@ class Projectile:
 			self.sprite = pygame.image.load('FBMissile.png')
 			pass
 		if projtype == 14:
+			self.damage = 0
 			self.move = 99
+			Bossplane = Enemy(1300, 450, 9)
+			enemies.append(Bossplane)
+			Bossplane2 = Enemy(1450, 450, 9)
+			enemies.append(Bossplane2)
+			Bossplane3 = Enemy(1600, 450, 9)
+			enemies.append(Bossplane3)
 			self.sprite = pygame.image.load('BossProjectile.png')
 			
 		
@@ -171,7 +188,9 @@ class Projectile:
 			
 		elif self.move == 12: # targeting missile
 			if self.x < targetx:
-				self.x+= self.xvel
+				self.x += self.xvel
+			if self.x > targetx:
+				self.x -= self.xvel
 			if self.y < targety:
 				self.y += self.yvel
 			if self.y > targety:
@@ -179,7 +198,6 @@ class Projectile:
 		
 		elif self.move == 99:
 			pass
-			
 	def Draw(self):
 		win.blit(self.sprite, (self.x, self.y))
 		
@@ -329,7 +347,7 @@ class Enemy:
 			self.name = 'Aurora 1A'
 			self.x = x
 			self.y = y
-			self.health = 100
+			self.health = 15
 			self.vel = 10
 			self. width = 64
 			self.height = 64
@@ -346,15 +364,15 @@ class Enemy:
 			self.name = 'Aurora Cannon'
 			self.x = x
 			self.y = y
-			self.health = 75
+			self.health = 125
 			self.vel = 5
 			self.width = 36
 			self.height = 28
 			self.sprite = pygame.image.load('BossCannon.png')
 			self.attacktype = 12
 			self.attacksprite = pygame.image.load('FBBullet.png')
-			self.attackCD = 2500
-			self.CDMAX = 2500
+			self.attackCD = 1000
+			self.CDMAX = 1000
 			self.movetype = 97
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 11: #Final Boss Missiles
@@ -363,15 +381,15 @@ class Enemy:
 			self.name = 'Aurora Missiles'
 			self.x = x
 			self.y = y
-			self.health = 50
+			self.health = 100
 			self.vel = 5
-			self.width = 20
+			self.width = 32
 			self.height = 46
 			self.sprite = pygame.image.load('BossMissiles.png')
 			self.attacktype = 13
 			self.attacksprite = pygame.image.load('FBMissile.png')
-			self.attackCD = 10000
-			self.CDMAX = 12500
+			self.attackCD = 5000
+			self.CDMAX = 5000
 			self.movetype = 98
 			self.hitbox = (self.x , self.y, self.width, self.height)
 		if enemtype == 12: #Final Boss
@@ -387,8 +405,8 @@ class Enemy:
 			self.sprite = pygame.image.load('FinalBossBlimp.png')
 			self.attacktype = 14
 			self.attacksprite = pygame.image.load('FinalBossPlane.png')
-			self.attackCD = 15000
-			self.CDMAX = 15000
+			self.attackCD = 8000
+			self.CDMAX = 12000
 			self.movetype = 99
 			self.hitbox = (self.x , self.y, self.width, self.height)
 		
@@ -427,7 +445,14 @@ class Enemy:
 			pass
 		
 		if self.movetype == 6:
-			pass
+			if self.y < y - 20:
+				self.y += self.vel
+			if self.y > y + 20:
+				self.y -= self.vel
+			if self.x < x + 250:
+				self.x += self.vel
+			if self.x > x + 275:
+				self.x -= self.vel
 		
 		if self.movetype == 7:
 			pass
@@ -513,7 +538,7 @@ def BackgroundRunner():
 	global bgy
 	global bg2y
 	global bg3y
-	
+
 	if prevbackground != 'bossfight':
 		bgx -= 5
 		bg2x -= 5
@@ -597,7 +622,7 @@ def redrawGameWindow():
 	for explosion in explosions:
 		win.blit(pygame.image.load('Explosion.png'), explosion)
 	
-	pygame.display.update()
+	pygame.display.flip()
 	
 def GetWave():
 	global killed
@@ -629,160 +654,205 @@ Plane = Player(200, 500, 64, 54, 10)
 run = True
 while run:
 	clock.tick(20)
+	keys = pygame.key.get_pressed()
+
 	
-	BackgroundRunner()
-	GetWave()
-		
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			run = False
+	if paused:
 	
-	while True:
-		keys = pygame.key.get_pressed()
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				run = False
+				
 		
-		if keys[pygame.K_q]:
-			pass
+		pausedscreen = pygame.image.load('PausedScreen.png')
+		win.blit(pausedscreen, (140, 50))
+		textplate = font2.render(str(score), True, (0, 0, 0))
+		if len(str(score)) == 1:
+			win.blit(textplate, (800, 220))
+		if len(str(score)) == 2:
+			win.blit(textplate, (750, 220))
+		if len(str(score)) == 3:
+			win.blit(textplate, (700, 220))
 		
-		if keys[pygame.K_a] and Plane.x > Plane.vel - 1:
-			Plane.x -= Plane.vel
-			Left = True
-			Right = False
-			Up = False
-			Down = False
+		pygame.display.flip()
 		
-		elif keys[pygame.K_d] and Plane.x < 1280 - Plane.width - Plane.vel + 10:
-			Plane.x += Plane.vel
-			Left = False
-			Right = True
-			Up = False
-			Down = False
-		else:
-			Left = False
-			Right = False
-			Up = False
-			Down = False
-			
-			
-		if keys[pygame.K_w] and Plane.y > Plane.vel - 1:
-			Plane.y -= Plane.vel
+		if keys[pygame.K_SPACE]:
+			paused = False
 		
-		if keys[pygame.K_s] and Plane.y < 600 - Plane.height - Plane.vel + 10:
-			Plane.y += Plane.vel
+	else:
 		
-		if keys[pygame.K_q] and BulletCD == 0:
-			if len(bullets) < 10:
-				PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1)
-				bullets.append(PlayerBullet)
-				BulletCD += 150
-			elif len(bullets) == 10:
-				BulletCD += 3500
-		if keys[pygame.K_e] and BombCD == 0:
-			if len(bombs) < 5:
-				PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2)
-				bombs.append(PlayerBomb)
-				BombCD += 400
-			if len(bombs) >= 2:
-				BombCD += 5000
-		break     #Key Presses
+		BackgroundRunner()
+		GetWave()
 		
-	if BulletCD != 0:
-		BulletCD -= 50
-	if BombCD != 0:
-		BombCD -= 50
-	
-	for bullet in bullets:
-		if 0 < bullet.x < 1280:
-			bullet.Move(Plane.x, Plane.y)
-		else:
-			bullets.pop(bullets.index(bullet))
-	
-	for bomb in bombs:
-		if 0 < bomb.x < 1280 and bomb.y < 700:
-			bomb.Move(Plane.x, Plane.y)
-		else:
-			bombs.pop(bombs.index(bomb))
-			
-	for enemy in enemies:
-		enemy.Move(Plane.x,Plane.y)
-		if enemy.attackCD <= 0:
-			EnemyAttack = Projectile(enemy.x, enemy.y, enemy.attacktype)
-			enemyattacks.append(EnemyAttack)
-			enemy.attackCD = enemy.CDMAX
-		else:
-			enemy.attackCD -= 40
-		if enemy.type < 12:
-			enemy.hitbox = (enemy.x, enemy.y, enemy.width, enemy.height)
-		else:
-			enemy.hitbox = (enemy.x, enemy.y + 23, enemy.width, enemy.height)
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				run = False
 		
 		while True:
-			if enemy.type < 12:
-				for bullet in bullets:
-					if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bullet.x, bullet.y):
-						enemy.health -= 3
-						Explosion = (bullet.x,bullet.y)
-						explosions.append(Explosion)
-						bullets.pop(bullets.index(bullet))
-			
-				for bomb in bombs:
-					if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bomb.x, bomb.y):
-						enemy.health -= 10
-						Explosion = (bomb.x,bomb.y)
-						explosions.append(Explosion)
-						bombs.pop(bombs.index(bomb))
-			else:
-				for bullet in bullets:
-					if ColissionDetect(enemy.x, enemy.y + 23, enemy.width, enemy.height, bullet.x, bullet.y):
-						enemy.health -= 3
-						Explosion = (bullet.x, bullet.y)
-						explosions.append(Explosion)
-						bullets.pop(bullets.index(bullet))
-				
-				for bomb in bombs:
-					if ColissionDetect(enemy.x, enemy.y + 23, enemy.width, enemy.height, bomb.x, bomb.y):
-						enemy.health -= 10
-						Explosion = (bomb.x, bomb.y)
-						explosions.append(Explosion)
-						bombs.pop(bombs.index(bomb))
-			
-			break
-		
-		if enemy.type < 12:
-			if enemy.health <= 0:
-				killed.append(enemy.name)
-				score += enemy.score
-				enemies.pop(enemies.index(enemy))
-		else:
-			if enemy.health <= 0:
-				killed.append(enemy.name)
-				score += enemy.score
-				run = False
-				enemies.pop(enemies.index(enemy))
-			
-	
-	for attack in enemyattacks:
-		if 0 < attack.x < 1280 and attack.y < 700:
-			attack.Move(Plane.x, Plane.y)
-			attack.Draw()
-		else:
-			enemyattacks.pop(enemyattacks.index(attack))
-		
-		if ColissionDetect(Plane.x, Plane.y, Plane.width, Plane.height, attack.x, attack.y):
-			Plane.health -= attack.damage
-			Explosion = (attack.x,attack.y)
-			explosions.append(Explosion)
-			enemyattacks.pop(enemyattacks.index(attack))
-	
-	Plane.hitbox = (Plane.x, Plane.y + (64 - Plane.height), Plane.width, Plane.height)
-	
-	if framecount + 1 > 24:
-		framecount = 0
 
-	if framecount % 6 == 0:
-		explosions = []
-	framecount += 1
-	redrawGameWindow()
-	if Plane.health <= 0:
-		run = False
+			if keys[pygame.K_a] and Plane.x > Plane.vel - 1:
+				Plane.x -= Plane.vel
+			elif keys[pygame.K_d] and Plane.x < 1280 - Plane.width - Plane.vel + 10:
+				Plane.x += Plane.vel
+			if keys[pygame.K_w] and Plane.y > Plane.vel - 1:
+				Plane.y -= Plane.vel
+			if keys[pygame.K_s] and Plane.y < 600 - Plane.height - Plane.vel + 10:
+				Plane.y += Plane.vel
+			
+			if keys[pygame.K_q] and BulletCD == 0:
+				if len(bullets) < 10:
+					PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1)
+					bullets.append(PlayerBullet)
+					BulletCD += 150
+				elif len(bullets) == 10:
+					BulletCD += 3500
+			if keys[pygame.K_e] and BombCD == 0:
+				if len(bombs) < 5:
+					PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2)
+					bombs.append(PlayerBomb)
+					BombCD += 400
+				if len(bombs) >= 2:
+					BombCD += 5000
+			break     #Key Presses
+			
+		if BulletCD != 0:
+			BulletCD -= 50
+		if BombCD != 0:
+			BombCD -= 50
 		
+		for bullet in bullets:
+			if 0 < bullet.x < 1280:
+				bullet.Move(Plane.x, Plane.y)
+			else:
+				bullets.pop(bullets.index(bullet))
+		
+		for bomb in bombs:
+			if 0 < bomb.x < 1280 and bomb.y < 700:
+				bomb.Move(Plane.x, Plane.y)
+			else:
+				bombs.pop(bombs.index(bomb))
+				
+		for enemy in enemies:
+			enemy.Move(Plane.x,Plane.y)
+			if enemy.attackCD <= 0:
+				EnemyAttack = Projectile(enemy.x, enemy.y, enemy.attacktype)
+				enemyattacks.append(EnemyAttack)
+				enemy.attackCD = enemy.CDMAX
+			else:
+				enemy.attackCD -= 40
+			if enemy.type < 12:
+				enemy.hitbox = (enemy.x, enemy.y, enemy.width, enemy.height)
+			else:
+				enemy.hitbox = (enemy.x, enemy.y + 23, enemy.width, enemy.height)
+			
+			while True:
+				if enemy.type < 12:
+					for bullet in bullets:
+						if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bullet.x, bullet.y):
+							enemy.health -= 3
+							Explosion = (bullet.x,bullet.y)
+							explosions.append(Explosion)
+							bullets.pop(bullets.index(bullet))
+				
+					for bomb in bombs:
+						if ColissionDetect(enemy.x, enemy.y, enemy.width, enemy.height, bomb.x, bomb.y):
+							enemy.health -= 10
+							Explosion = (bomb.x,bomb.y)
+							explosions.append(Explosion)
+							bombs.pop(bombs.index(bomb))
+				else:
+					for bullet in bullets:
+						if ColissionDetect(enemy.x, enemy.y + 23, enemy.width, enemy.height, bullet.x, bullet.y):
+							enemy.health -= 3
+							Explosion = (bullet.x, bullet.y)
+							explosions.append(Explosion)
+							bullets.pop(bullets.index(bullet))
+					
+					for bomb in bombs:
+						if ColissionDetect(enemy.x, enemy.y + 23, enemy.width, enemy.height, bomb.x, bomb.y):
+							enemy.health -= 10
+							Explosion = (bomb.x, bomb.y)
+							explosions.append(Explosion)
+							bombs.pop(bombs.index(bomb))
+				
+				break
+			
+			if enemy.type < 12:
+				if enemy.health <= 0:
+					killed.append(enemy.name)
+					score += enemy.score
+					enemies.pop(enemies.index(enemy))
+			else:
+				if enemy.health <= 0:
+					killed.append(enemy.name)
+					score += enemy.score
+					run = False
+					won = True
+					enemies.pop(enemies.index(enemy))
+				
+		
+		for attack in enemyattacks:
+			if 0 < attack.x < 1280 and attack.y < 700:
+				attack.Move(Plane.x, Plane.y)
+				attack.Draw()
+			else:
+				enemyattacks.pop(enemyattacks.index(attack))
+			
+			if ColissionDetect(Plane.x, Plane.y, Plane.width, Plane.height, attack.x, attack.y):
+				Plane.health -= attack.damage
+				Explosion = (attack.x,attack.y)
+				explosions.append(Explosion)
+				enemyattacks.pop(enemyattacks.index(attack))
+		
+		Plane.hitbox = (Plane.x, Plane.y + (64 - Plane.height), Plane.width, Plane.height)
+		
+		if framecount + 1 > 24:
+			framecount = 0
+	
+		if framecount % 6 == 0:
+			explosions = []
+		framecount += 1
+		redrawGameWindow()
+		if Plane.health <= 0:
+			run = False
+			won = False
+		
+		if keys[pygame.K_SPACE]:
+			paused = True
+
+while True:
+	clock.tick(40)
+	keys = pygame.key.get_pressed()
+	
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			pygame.quit()
+			
+			
+	if won:
+		winscreen = pygame.image.load('WinScreen.png')
+		win.blit(winscreen, (140, 50))
+		textplate = font2.render(str(score), True, (0, 0, 0))
+		if len(str(score)) == 1:
+			win.blit(textplate, (800, 220))
+		if len(str(score)) == 2:
+			win.blit(textplate, (750, 220))
+		if len(str(score)) == 3:
+			win.blit(textplate, (700, 220))
+		
+		pygame.display.flip()
+	else:
+		lossscreen = pygame.image.load('LossScreen.png')
+		win.blit(lossscreen, (140, 50))
+		textplate = font2.render(str(score), True, (0, 0, 0))
+		if len(str(score)) == 1:
+			win.blit(textplate, (800, 220))
+		if len(str(score)) == 2:
+			win.blit(textplate, (750, 220))
+		if len(str(score)) == 3:
+			win.blit(textplate, (700, 220))
+		
+		pygame.display.flip()
+	
+	
 pygame.quit()
