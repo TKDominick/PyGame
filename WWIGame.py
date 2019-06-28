@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 pygame.init()
 
@@ -12,7 +13,7 @@ Right = False
 Up = False
 Down = False
 
-score = 101
+score = 0
 bg = pygame.image.load('Airfield1.png')
 print(bg)
 bg2 = pygame.image.load('Airfield2.png')
@@ -30,6 +31,8 @@ bg3y = 0
 paused = True
 won = False
 
+#bulletsound = pygame.mixer.Sound('')
+#bombsound = pygame.mixer.Sound('')
 framecount = 0
 bossspawned = False
 initializefight = False
@@ -71,7 +74,7 @@ class Player:
 		
 	def Draw(self):
 		win.blit(self.char, (self.x,self.y))
-		pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+		# pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 	def DrawHealth(self):
 		healthchar = pygame.image.load(self.healthsprites[self.health])
 		win.blit(healthchar, (480, 75))
@@ -187,13 +190,13 @@ class Projectile:
 			self.xvel += self.xaccel
 			
 		elif self.move == 12: # targeting missile
-			if self.x < targetx:
+			if self.x < targetx + 32:
 				self.x += self.xvel
-			if self.x > targetx:
+			if self.x > targetx + 32:
 				self.x -= self.xvel
-			if self.y < targety:
+			if self.y < targety + 32:
 				self.y += self.yvel
-			if self.y > targety:
+			if self.y > targety + 32:
 				self.y -= self.yvel
 		
 		elif self.move == 99:
@@ -206,6 +209,7 @@ class Enemy:
 	def __init__(self, x, y, enemtype):
 		
 		if enemtype == 1:        # Balloon 1
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 1
 			self.name = 'Small Observer Balloon'
 			self.score = 3
@@ -308,6 +312,7 @@ class Enemy:
 			self.movetype = 5
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 7: #Cannon
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 7
 			self.name = 'Enemy Cannon'
 			self.score = 1
@@ -325,6 +330,7 @@ class Enemy:
 			self.movetype = 3
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 8: #Tank
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 8
 			self.name = 'Enemy Tank'
 			self.score = 2
@@ -342,6 +348,7 @@ class Enemy:
 			self.movetype = 2
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 9: #Final Boss Plane
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 9
 			self.score = 4
 			self.name = 'Aurora 1A'
@@ -359,6 +366,7 @@ class Enemy:
 			self.movetype = 6
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 10: #Final Boss Cannon
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 10
 			self.score = 10
 			self.name = 'Aurora Cannon'
@@ -376,6 +384,7 @@ class Enemy:
 			self.movetype = 97
 			self.hitbox = (self.x, self.y, self.width, self.height)
 		if enemtype == 11: #Final Boss Missiles
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 11
 			self.score = 20
 			self.name = 'Aurora Missiles'
@@ -393,6 +402,7 @@ class Enemy:
 			self.movetype = 98
 			self.hitbox = (self.x , self.y, self.width, self.height)
 		if enemtype == 12: #Final Boss
+			#self.sound = pygame.mixer.Sound('')
 			self.type = 12
 			self.score = 100
 			self.name = 'The Aurora'
@@ -412,7 +422,7 @@ class Enemy:
 		
 	def Draw(self):
 		win.blit(self.sprite, (self.x, self.y))
-		pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+		# pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 		
 	def Move(self, x, y):
 		if self.movetype == 1: #Balloon 1
@@ -630,21 +640,22 @@ def GetWave():
 	global score
 	global enemies
 	if score <= 100:
-		if len(enemies) == 0 and  10 > bgcount >= 5:
-			SmolBalloon = Enemy(900, 350, 1)
-			Cannon = Enemy(900, 630, 7)
+		if len(enemies) == 0 and  10 > bgcount >= 2:
+			SmolBalloon = Enemy(1350, 350, 1)
+			Cannon = Enemy(1350, 570, 7)
 			enemies.append(SmolBalloon)
 			enemies.append(Cannon)
 		if len(enemies) == 0 and 20 > bgcount >= 12:
-			Cannon = Enemy(900, 620, 7)
+			Cannon = Enemy(1350, 620, 7)
 			enemies.appesnd(Cannon)
 		if len(enemies) == 0 and 40 > bgcount >= 20:
-			Tank = Enemy(900, 620, 8)
+			Tank = Enemy(1350, 620, 8)
 			enemies.append(Tank)
+	
 	if score > 100 and prevbackground == 'bossfight' and not bossspawned:
 		Aurora = Enemy(1280, 82, 12)
 		AuroraCannon = Enemy(1330, 77, 10)
-		AuroraMissiles = Enemy(1445, 264, 11)
+		AuroraMissiles = Enemy(1450, 266, 11)
 		enemies.append(Aurora)
 		enemies.append(AuroraCannon)
 		enemies.append(AuroraMissiles)
@@ -655,15 +666,13 @@ run = True
 while run:
 	clock.tick(20)
 	keys = pygame.key.get_pressed()
-
 	
 	if paused:
-	
+		time.sleep(0.1)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				run = False
 				
-		
 		pausedscreen = pygame.image.load('PausedScreen.png')
 		win.blit(pausedscreen, (140, 50))
 		textplate = font2.render(str(score), True, (0, 0, 0))
@@ -678,6 +687,7 @@ while run:
 		
 		if keys[pygame.K_SPACE]:
 			paused = False
+			time.sleep(0.1)
 		
 	else:
 		
@@ -698,11 +708,17 @@ while run:
 				Plane.y -= Plane.vel
 			if keys[pygame.K_s] and Plane.y < 600 - Plane.height - Plane.vel + 10:
 				Plane.y += Plane.vel
-			
+			if keys[pygame.K_EQUALS] and score < 100: # Cheat, Goes Straight to boss
+				for enemy in enemies:
+					enemies.pop(enemies.index(enemy))
+					score += 101
+					break
+					
 			if keys[pygame.K_q] and BulletCD == 0:
 				if len(bullets) < 10:
 					PlayerBullet = Projectile(Plane.x + 35, Plane.y + 26, 1)
 					bullets.append(PlayerBullet)
+					#bulletsound.play()
 					BulletCD += 150
 				elif len(bullets) == 10:
 					BulletCD += 3500
@@ -710,6 +726,7 @@ while run:
 				if len(bombs) < 5:
 					PlayerBomb = Projectile(Plane.x + 20, Plane.y + 40, 2)
 					bombs.append(PlayerBomb)
+					#bombsound.play()
 					BombCD += 400
 				if len(bombs) >= 2:
 					BombCD += 5000
@@ -738,6 +755,7 @@ while run:
 				EnemyAttack = Projectile(enemy.x, enemy.y, enemy.attacktype)
 				enemyattacks.append(EnemyAttack)
 				enemy.attackCD = enemy.CDMAX
+				#(enemy.sound).play()
 			else:
 				enemy.attackCD -= 40
 			if enemy.type < 12:
@@ -853,6 +871,5 @@ while True:
 			win.blit(textplate, (700, 220))
 		
 		pygame.display.flip()
-	
 	
 pygame.quit()
